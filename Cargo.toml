@@ -8,6 +8,7 @@ authors = ["Peter Williams <peter@newton.cx>"]
 description = "Decode an ELF/x86 binary and print out which instruction set extensions it uses."
 homepage = "https://github.com/pkgw/elfx86exts"
 repository = "https://github.com/pkgw/elfx86exts"
+documentation = "https://docs.rs/crate/elfx86exts"
 readme = "README.md"
 keywords = ["disassembly", "ELF", "x86"]
 categories = ["command-line-utilities", "development-tools::debugging", "parsing"]
