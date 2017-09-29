@@ -1,0 +1,13 @@
+# Copyright 2017 Peter Williams
+# Licensed under the MIT License.
+
+[package]
+name = "elfx86exts"
+version = "0.1.0"
+authors = ["Peter Williams <peter@newton.cx>"]
+
+[dependencies]
+capstone3 = "^0.1"
+clap = "^2.26"
+libc = "^0.2"
+xmas-elf = "^0.6"
