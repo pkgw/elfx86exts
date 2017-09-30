@@ -1,6 +1,9 @@
 // Copyright 2017 Peter Williams
 // Licensed under the MIT License.
 
+/// elfx86exts helps you understand which instruction set extensions are used
+/// by an x86 ELF binary.
+
 extern crate capstone3;
 extern crate clap;
 extern crate libc;
@@ -80,7 +83,7 @@ fn describe_group(g: libc::uint8_t) -> Option<&'static str> {
 fn main() {
     let matches = clap::App::new("elfx86exts")
         .version("0.1.0")
-        .about("Analyze ELF/x86 binaries to understand which extensions they use.")
+        .about("Analyze an ELF/x86 binary to understand which instruction set extensions it uses.")
         .arg(clap::Arg::with_name("FILE")
              .help("The path of the file to analyze")
              .required(true)
