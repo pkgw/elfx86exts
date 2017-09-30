@@ -123,7 +123,11 @@ fn main() {
                 if seen_groups.insert(group_code) {
                     // If insert returned true, we hadn't seen this code before.
                     if let Some(desc) = describe_group(group_code) {
-                        println!("{}", desc);
+                        if let Some(mnemonic) = insn.mnemonic() {
+                            println!("{} ({})", desc, mnemonic);
+                        } else {
+                            println!("{}", desc);
+                        }
                     }
                 }
             }
