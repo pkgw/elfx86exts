@@ -4,35 +4,21 @@
 /// elfx86exts helps you understand which instruction set extensions are used
 /// by an x86 ELF binary.
 
-extern crate capstone3;
+extern crate capstone;
 extern crate clap;
-extern crate libc;
-extern crate xmas_elf;
+extern crate memmap;
+extern crate object;
 
+use std::fs::File;
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
-use xmas_elf::ElfFile;
-use xmas_elf::sections::ShType;
-
-
-/// Helper function to open a file and read it into a buffer.
-/// Allocates the buffer.
-///
-/// Copied from xmas-elf/src/bin/main.rs
-fn open_file<P: AsRef<Path>>(name: P) -> Vec<u8> {
-    use std::fs::File;
-    use std::io::Read;
-
-    let mut f = File::open(name).expect("couldn't open file");
-    let mut buf = Vec::new();
-    assert!(f.read_to_end(&mut buf).expect("couldn't read file") > 0);
-    buf
-}
+use std::path::PathBuf;
+use capstone::{Arch, Capstone, NO_EXTRA_MODE, Mode};
+use object::{Machine, Object, ObjectSection, SectionKind};
 
 
 /// These are from capstone/include/x86.h, which is super sketchy since the
 /// enum values are not specificied explicitly.
-fn describe_group(g: libc::uint8_t) -> Option<&'static str> {
+fn describe_group(g: u8) -> Option<&'static str> {
     Some(match g {
         128 => "VT-x/AMD-V", // https://github.com/aquynh/capstone/blob/master/include/x86.h#L1583
         129 => "3DNow",
@@ -83,7 +69,7 @@ fn describe_group(g: libc::uint8_t) -> Option<&'static str> {
 fn main() {
     let matches = clap::App::new("elfx86exts")
         .version("0.1.0")
-        .about("Analyze an ELF/x86 binary to understand which instruction set extensions it uses.")
+        .about("Analyze a x86 binary to understand which instruction set extensions it uses.")
         .arg(clap::Arg::with_name("FILE")
              .help("The path of the file to analyze")
              .required(true)
@@ -91,41 +77,34 @@ fn main() {
         .get_matches();
 
     let inpath = PathBuf::from(matches.value_of_os("FILE").unwrap());
-    let contents = open_file(inpath);
-    let elf_file = ElfFile::new(&contents).expect("couldn't parse as an ELF file");
+    let f = File::open(inpath).expect("can't open object file");
+    let buf = unsafe { memmap::Mmap::map(&f).expect("can't memmap object file") };
 
-    let cs = capstone3::Capstone::new(capstone3::Arch::X86).expect("couldn\'t set up Capstone");
-    cs.detail().expect("couldn't turn on Capstone detail mode");
+    let obj = object::File::parse(&*buf).expect("can't parse object file");
+
+    let (arch, mode) = match obj.machine() {
+        Machine::X86 => (Arch::X86, Mode::Mode32),
+        Machine::X86_64 => (Arch::X86, Mode::Mode64),
+        _ => unimplemented!(),
+    };
+
+    let mut cs = Capstone::new_raw(arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
+    cs.set_detail(true).expect("can't enable Capstone detail mode");
 
     let mut seen_groups = HashSet::new();
 
-    let mut sect_iter = elf_file.section_iter();
-    // Skip the first (dummy) section
-    sect_iter.next();
+    for sect in obj.sections() {
+        if sect.kind() != SectionKind::Text {
+            continue;
+        }
 
-    for sect in sect_iter {
-        //let name = sect.get_name(&elf_file).expect("couldn\'t get a section name");
-        match sect.get_type() {
-            Ok(ShType::ProgBits) => {},
-            _ => { continue; },
-        };
-
-        let insns = cs.disassemble(sect.raw_data(&elf_file), sect.offset()).expect("couldn't disassemble section");
+        let insns = cs.disasm_all(sect.data(), sect.address()).expect("couldn't disassemble section");
 
         for insn in insns.iter() {
-            let detail = match insn.detail() {
-                Some(d) => d,
-                None => { continue; },
-            };
-
-            let groups = detail.groups();
-
-            for i in 0..detail.groups_count() {
-                let group_code = groups[i as usize];
-
-                if seen_groups.insert(group_code) {
+            for group_code in cs.insn_group_ids(&insn).unwrap() {
+                if seen_groups.insert(*group_code) {
                     // If insert returned true, we hadn't seen this code before.
-                    if let Some(desc) = describe_group(group_code) {
+                    if let Some(desc) = describe_group(*group_code) {
                         if let Some(mnemonic) = insn.mnemonic() {
                             println!("{} ({})", desc, mnemonic);
                         } else {
