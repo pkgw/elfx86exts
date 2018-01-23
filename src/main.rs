@@ -1,11 +1,13 @@
-// Copyright 2017 Peter Williams
+// Copyright 2017-2018 Peter Williams
 // Licensed under the MIT License.
 
 /// elfx86exts helps you understand which instruction set extensions are used
-/// by an x86 ELF binary.
+/// by an x86 binary. Despite the misleading name, this crate supports both
+/// ELF and MachO binary formats via the
+/// [capstone](https://crates.io/crates/capstone) crate.
 
 extern crate capstone;
-extern crate clap;
+#[macro_use] extern crate clap;
 extern crate memmap;
 extern crate object;
 
@@ -68,8 +70,10 @@ fn describe_group(g: u8) -> Option<&'static str> {
 
 fn main() {
     let matches = clap::App::new("elfx86exts")
-        .version("0.1.0")
-        .about("Analyze a x86 binary to understand which instruction set extensions it uses.")
+        .version(crate_version!())
+        .about("Analyze a binary to understand which instruction set extensions it uses.")
+        .after_help("Despite the misleading name, this program can handle binaries in both\
+                     ELF and MachO formats, and possibly others.")
         .arg(clap::Arg::with_name("FILE")
              .help("The path of the file to analyze")
              .required(true)

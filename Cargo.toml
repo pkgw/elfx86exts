@@ -1,16 +1,16 @@
-# Copyright 2017 Peter Williams
+# Copyright 2017-2018 Peter Williams
 # Licensed under the MIT License.
 
 [package]
 name = "elfx86exts"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Peter Williams <peter@newton.cx>"]
-description = "Decode an ELF/x86 binary and print out which instruction set extensions it uses."
+description = "Decode a x86 binaries (ELF or MachO) and print out which instruction set extensions they use."
 homepage = "https://github.com/pkgw/elfx86exts"
 repository = "https://github.com/pkgw/elfx86exts"
 documentation = "https://docs.rs/crate/elfx86exts"
 readme = "README.md"
-keywords = ["disassembly", "ELF", "x86"]
+keywords = ["disassembly", "ELF", "MachO", "x86"]
 categories = ["command-line-utilities", "development-tools::debugging", "parsing"]
 license = "MIT"
 
