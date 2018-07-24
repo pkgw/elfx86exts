@@ -102,13 +102,15 @@ fn main() {
             continue;
         }
 
-        let insns = cs.disasm_all(sect.data(), sect.address()).expect("couldn't disassemble section");
+        let insns = cs.disasm_all(&sect.data(), sect.address()).expect("couldn't disassemble section");
 
         for insn in insns.iter() {
-            for group_code in cs.insn_group_ids(&insn).unwrap() {
-                if seen_groups.insert(*group_code) {
+            let detail = cs.insn_detail(&insn).expect("couldn't get details of an instruction");
+
+            for group_code in detail.groups() {
+                if seen_groups.insert(group_code) {
                     // If insert returned true, we hadn't seen this code before.
-                    if let Some(desc) = describe_group(*group_code) {
+                    if let Some(desc) = describe_group(group_code.0) {
                         if let Some(mnemonic) = insn.mnemonic() {
                             println!("{} ({})", desc, mnemonic);
                         } else {

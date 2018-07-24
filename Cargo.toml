@@ -15,7 +15,7 @@ categories = ["command-line-utilities", "development-tools::debugging", "parsing
 license = "MIT"
 
 [dependencies]
-capstone = "^0.2"
-clap = "^2.26"
-object = "^0.7"
+capstone = "^0.4"
+clap = "^2.32"
+object = "^0.9"
 memmap = "^0.6.2"
