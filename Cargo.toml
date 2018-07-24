@@ -17,5 +17,5 @@ license = "MIT"
 [dependencies]
 capstone = "^0.2"
 clap = "^2.26"
-object = "^0.7"
+object = "^0.9"
 memmap = "^0.6.2"
