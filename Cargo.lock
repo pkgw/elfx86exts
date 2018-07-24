@@ -20,15 +20,23 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "capstone"
-version = "0.2.0"
+version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "capstone-sys 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "capstone-sys 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "capstone-sys"
-version = "0.6.0"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+dependencies = [
+ "cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "cc"
+version = "1.0.18"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -55,7 +63,7 @@ dependencies = [
 name = "elfx86exts"
 version = "0.1.0"
 dependencies = [
- "capstone 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "capstone 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "clap 2.26.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "memmap 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "object 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -235,8 +243,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum ansi_term 0.9.0 (registry+https://github.com/rust-lang/crates.io-index)" = "23ac7c30002a5accbf7e8987d0632fa6de155b7c3d39d0067317a391e00a2ef6"
 "checksum atty 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d912da0db7fa85514874458ca3651fe2cddace8d0b0505571dbdcd41ab490159"
 "checksum bitflags 0.9.1 (registry+https://github.com/rust-lang/crates.io-index)" = "4efd02e230a02e18f92fc2735f44597385ed02ad8f831e7c1c1156ee5e1ab3a5"
-"checksum capstone 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "baec16ad9e8a53db13c6fad761ba1348b00b5dbe381ba152cba39b767253a508"
-"checksum capstone-sys 0.6.0 (registry+https://github.com/rust-lang/crates.io-index)" = "5d39c6f285e36142eaef829881a2e724c51f31d3b550741ec958e4ec3f87f6ee"
+"checksum capstone 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6ca9b32d45dc12d9408b60089619571acb3b1c4bd821fed57aa4c6054df1508e"
+"checksum capstone-sys 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b72fd34286e30abfd29efef1b2bd08b58c8e6e74134dfa70758c270506c4ae89"
+"checksum cc 1.0.18 (registry+https://github.com/rust-lang/crates.io-index)" = "2119ea4867bd2b8ed3aecab467709720b2d55b1bcfe09f772fd68066eaf15275"
 "checksum cfg-if 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "d4c819a1287eb618df47cc647173c5c4c66ba19d888a6e50d605672aed3140de"
 "checksum clap 2.26.2 (registry+https://github.com/rust-lang/crates.io-index)" = "3451e409013178663435d6f15fdb212f14ee4424a3d74f979d081d0a66b6f1f2"
 "checksum goblin 0.0.13 (registry+https://github.com/rust-lang/crates.io-index)" = "b9c41a5d6172009a2dddc6e1d8f48472e6d01aab6f8b4db9cb6703596047885c"
