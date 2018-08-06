@@ -1,0 +1,28 @@
+# Copyright 2018 Peter Williams
+# Licensed under the MIT License
+
+language: rust
+
+cache: cargo
+
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: xenial
+      rust: stable
+    - os: linux
+      sudo: required
+      dist: xenial
+      rust: beta
+    - os: linux
+      sudo: required
+      dist: xenial
+      rust: nightly
+  allow_failures:
+    - rust: nightly
+
+script:
+  - |
+    cargo build --verbose &&
+    cargo test
