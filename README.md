@@ -8,6 +8,13 @@ more limited.)
 I have no idea what I'm doing here, but it seems to work. There are several
 Rust crates that make this pretty easy to do.
 
+
+## Change Log
+
+See [the CHANGELOG](./CHANGELOG.md) for news about what has changed between
+releases.
+
+
 ## Installation
 
 ### Prepackaged
