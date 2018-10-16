@@ -11,8 +11,10 @@ extern crate capstone;
 extern crate memmap;
 extern crate object;
 
-use std::fs::File;
+use std::cmp;
+use std::collections::HashMap;
 use std::collections::HashSet;
+use std::fs::File;
 use std::path::PathBuf;
 use capstone::{Arch, Capstone, NO_EXTRA_MODE, Mode};
 use object::{Machine, Object, ObjectSection, SectionKind};
@@ -67,8 +69,94 @@ fn describe_group(g: u8) -> Option<&'static str> {
     })
 }
 
-
 fn main() {
+    // This list is taken from https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
+    // The ID numbers here are internal elfx86exts identifiers; they have no meaning except
+    // for their relative ordering.
+    let cpu_generations: HashMap<&str, u16> =
+        [("Pentium",      100),
+         ("Pentium Pro",  101),
+         ("Pentium III",  102),
+         ("Pentium 4",    103),
+         ("Pentium M",    104),
+         ("Prescott",     105),
+         ("Intel Core",   106),
+         ("Penryn",       107),
+         ("Nehalem",      108),
+         ("Bonnell",      109),
+         ("Westmere",     110),
+         ("Saltwell",     111),
+         ("Sandy Bridge", 112),
+         ("Ivy Bridge",   113),
+         ("Silvermont",   114),
+         ("Haswell",      115),
+         ("Broadwell",    116),
+         ("Airmont",      117),
+         ("Skylake",      118),
+         ("Goldmont",     119),
+         ("Kaby Lake",    120),
+         ("Coffee Lake",  121),
+         ("Cannon Lake",  122),
+         ("Whiskey Lake", 123),
+         ("Amber Lake",   124),
+         ("Cascade Lake", 125),
+         ("Cooper Lake",  126),
+         ("Ice Lake",     127),
+         ("Unknown",      999)
+        ].iter().cloned().collect();
+    let mut cpu_generations_reverse: HashMap<u16, &str> = HashMap::new();
+    for (key, val) in &cpu_generations {
+        cpu_generations_reverse.insert(*val, key);
+    }
+    // The Intel generation that introduced each instruction set
+    // This list is based on Googling and Wikipedia reading
+    // Many of these are approximations, since CPU development isn't strictly linear, and not
+    // all models of a generation support a given instruction set.
+    let instrset_to_cpu: HashMap<&str, &str> =
+        [("VT-x/AMD-V", "Intel Core"), // guess; https://en.wikipedia.org/wiki/X86_virtualization
+         ("3DNow", "Unknown"), // Not supported by Intel CPUs; https://en.wikipedia.org/wiki/3DNow!
+         ("AES", "Westmere"), // https://en.wikipedia.org/wiki/AES_instruction_set
+         ("ADX", "Broadwell"), // https://en.wikipedia.org/wiki/Intel_ADX
+         ("AVX", "Sandy Bridge"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
+         ("AVX2", "Haswell"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
+         ("AVX512", "Unknown"), // It's complicated. https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
+         ("BMI", "Haswell"), // https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets
+         ("BMI2", "Haswell"), // https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets
+         ("CMOV", "Pentium Pro"), // https://en.wikipedia.org/wiki/X86_instruction_listings
+         ("F16C", "Ivy Bridge"), // https://en.wikipedia.org/wiki/F16C
+         ("FMA", "Haswell"), // https://en.wikipedia.org/wiki/FMA_instruction_set
+         ("FMA4", "Unknown"), // Not supported by Intel? https://en.wikipedia.org/wiki/FMA_instruction_set
+         ("FSGSBASE", "Unknown"), // ???
+         ("HLE", "Haswell"), // Part of TSX - https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions
+         ("MMX", "Pentium"), // https://en.wikipedia.org/wiki/MMX_(instruction_set)
+         ("MODE32", "Pentium"), // Assuming all x86 CPUs support 32-bit mode
+         ("MODE64", "Intel Core"), // I'm assuming this just means x86-64 support
+         ("RTM", "Haswell"), // Part of TSX - https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions
+         ("SHA", "Goldmont"), // https://en.wikipedia.org/wiki/Intel_SHA_extensions
+         ("SSE1", "Pentium III"), // https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions
+         ("SSE2", "Pentium 4"), // https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions
+         ("SSE3", "Prescott"), // https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions
+         ("SSE41", "Penryn"), // https://en.wikipedia.org/wiki/SSE4
+         ("SSE42", "Nehalem"), // https://en.wikipedia.org/wiki/SSE4
+         ("SSE4A", "Unknown"), // AMD-only - https://en.wikipedia.org/wiki/SSE4
+         ("SSSE3", "Unknown"), // Merom, but I don't know where that goes in the CPU list
+         ("PCLMUL", "Intel Core"), // https://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
+         ("XOP", "Unknown"), // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
+         ("CDI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
+         ("ERI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
+         ("TBM", "Unknown"), // AMD-only - https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#TBM_(Trailing_Bit_Manipulation)
+         ("16BITMODE", "Unknown"),
+         ("NOT64BITMODE", "Unknown"),
+         ("SGX", "Skylake"), // https://en.wikipedia.org/wiki/Software_Guard_Extensions
+         ("DQI", "Unknown"), // Couldn't find a reference
+         ("BWI", "Unknown"), // Looks like a Xeon-only Knights Landing+ extension? - https://reviews.llvm.org/D26306
+         ("PFI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
+         ("VLX", "Unknown"), // Couldn't find a reference
+         ("SMAP", "Broadwell"), // https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention
+         ("NOVLX", "Unknown"), // Couldn't find a reference
+        ].iter().cloned().collect();
+
+
     let matches = clap::App::new("elfx86exts")
         .version(crate_version!())
         .about("Analyze a binary to understand which instruction set extensions it uses.")
@@ -96,6 +184,7 @@ fn main() {
     cs.set_detail(true).expect("can't enable Capstone detail mode");
 
     let mut seen_groups = HashSet::new();
+    let mut max_gen_code = 100;
 
     for sect in obj.sections() {
         if sect.kind() != SectionKind::Text {
@@ -113,6 +202,17 @@ fn main() {
                     if let Some(desc) = describe_group(group_code.0) {
                         if let Some(mnemonic) = insn.mnemonic() {
                             println!("{} ({})", desc, mnemonic);
+                            match instrset_to_cpu.get(desc) {
+                                Some(generation) => {
+                                    match cpu_generations.get(generation) {
+                                        Some(gen_code) => {
+                                            max_gen_code = cmp::max(max_gen_code, *gen_code);
+                                        },
+                                        None => unimplemented!()
+                                    }
+                                },
+                                None => unimplemented!()
+                            }
                         } else {
                             println!("{}", desc);
                         }
@@ -120,5 +220,12 @@ fn main() {
                 }
             }
         }
+    }
+
+    match cpu_generations_reverse.get(&max_gen_code) {
+        Some(generation) => {
+            println!("CPU Generation: {}", generation);
+        },
+        None => unimplemented!()
     }
 }
