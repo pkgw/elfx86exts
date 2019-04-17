@@ -22,6 +22,12 @@ matrix:
   allow_failures:
     - rust: nightly
 
+# Don't CI branches besides master. PR's still get built! This prevents PRs
+# being built twice in the standard workflow.
+branches:
+  only:
+    - master
+
 before_script:
   - rustup component add rustfmt
 
