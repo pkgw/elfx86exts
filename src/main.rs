@@ -12,7 +12,7 @@ extern crate memmap;
 extern crate object;
 
 use capstone::{Arch, Capstone, Mode, NO_EXTRA_MODE};
-use object::{Machine, Object, ObjectSection, SectionKind};
+use object::{Object, ObjectSection, SectionKind};
 use std::cmp;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -184,14 +184,14 @@ fn main() {
 
     let obj = object::File::parse(&*buf).expect("can't parse object file");
 
-    let (arch, mode) = match obj.machine() {
-        Machine::X86 => (Arch::X86, Mode::Mode32),
-        Machine::X86_64 => (Arch::X86, Mode::Mode64),
-        _ => unimplemented!(),
+    let mode = if obj.is_64() {
+        Mode::Mode64
+    } else {
+        Mode::Mode32
     };
 
     let mut cs =
-        Capstone::new_raw(arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
+        Capstone::new_raw(Arch::X86, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
     cs.set_detail(true)
         .expect("can't enable Capstone detail mode");
 
