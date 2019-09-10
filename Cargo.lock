@@ -100,7 +100,7 @@ dependencies = [
  "clap 2.33.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "escargot 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "memmap 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "object 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "object 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -216,14 +216,14 @@ dependencies = [
 
 [[package]]
 name = "object"
-version = "0.13.0"
+version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "flate2 1.0.11 (registry+https://github.com/rust-lang/crates.io-index)",
  "goblin 0.0.24 (registry+https://github.com/rust-lang/crates.io-index)",
  "parity-wasm 0.40.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "scroll 0.9.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "target-lexicon 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "target-lexicon 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "uuid 0.7.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -403,7 +403,7 @@ dependencies = [
 
 [[package]]
 name = "target-lexicon"
-version = "0.4.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -494,7 +494,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum memmap 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)" = "6585fd95e7bb50d6cc31e20d4cf9afb4e2ba16c5846fc76793f11218da9c475b"
 "checksum miniz-sys 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)" = "1e9e3ae51cea1576ceba0dde3d484d30e6e5b86dee0b2d412fe3a16a15c98202"
 "checksum miniz_oxide 0.3.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7108aff85b876d06f22503dcce091e29f76733b2bfdd91eebce81f5e68203a10"
-"checksum object 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d89ec45bc6b810c6ee998e22953fbf387a40fcbf5014dcbb9e5ba9a09a81ee15"
+"checksum object 0.14.0 (registry+https://github.com/rust-lang/crates.io-index)" = "81afbc5773e99efe9533d8a539dfac37e531dcd0f4eeb41584bae03ccf76d4c2"
 "checksum parity-wasm 0.40.1 (registry+https://github.com/rust-lang/crates.io-index)" = "0dd34b50d446f2e45f5f101dc9483a912a4f8508d6182f5190056033267004dd"
 "checksum plain 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 "checksum predicates 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)" = "53e09015b0d3f5a0ec2d4428f7559bb7b3fff341b4e159fedd1d57fac8b939ff"
@@ -517,7 +517,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum syn 0.15.44 (registry+https://github.com/rust-lang/crates.io-index)" = "9ca4b3b69a77cbe1ffc9e198781b7acb0c7365a883670e8f1c1bc66fba79a5c5"
 "checksum syn 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)" = "66850e97125af79138385e9b88339cbcd037e3f28ceab8c5ad98e64f0f1f80bf"
 "checksum synstructure 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)" = "02353edf96d6e4dc81aea2d8490a7e9db177bf8acb0e951c24940bf866cb313f"
-"checksum target-lexicon 0.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1b0ab4982b8945c35cc1c46a83a9094c414f6828a099ce5dcaa8ee2b04642dcb"
+"checksum target-lexicon 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "7975cb2c6f37d77b190bc5004a2bb015971464756fde9514651a525ada2a741a"
 "checksum textwrap 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "d326610f408c7a4eb6f51c37c330e496b08506c9457c9d34287ecc38809fb060"
 "checksum treeline 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)" = "a7f741b240f1a48843f9b8e0444fb55fb2a4ff67293b50a9179dfd5ea67f8d41"
 "checksum unicode-width 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)" = "7007dbd421b92cc6e28410fe7362e2e0a2503394908f417b68ec8d1c364c4e20"
