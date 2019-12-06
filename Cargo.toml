@@ -21,5 +21,5 @@ object = "^0.16"
 memmap = "^0.7.0"
 
 [dev-dependencies]
-assert_cmd = "0.11"
+assert_cmd = "0.12"
 escargot = "0.5"
