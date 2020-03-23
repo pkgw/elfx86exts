@@ -203,8 +203,10 @@ fn main() {
             continue;
         }
 
+        let data = sect.data().expect("couldn't get section data");
+
         let insns = cs
-            .disasm_all(&sect.data(), sect.address())
+            .disasm_all(&data, sect.address())
             .expect("couldn't disassemble section");
 
         for insn in insns.iter() {
