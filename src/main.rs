@@ -167,7 +167,7 @@ fn main() {
         .version(crate_version!())
         .about("Analyze a binary to understand which instruction set extensions it uses.")
         .after_help(
-            "Despite the misleading name, this program can handle binaries in both\
+            "Despite the misleading name, this program can handle binaries in both \
              ELF and MachO formats, and possibly others.",
         )
         .arg(
