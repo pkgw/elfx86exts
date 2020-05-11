@@ -3,7 +3,7 @@
 
 [package]
 name = "elfx86exts"
-version = "0.4.0"
+version = "0.4.1-alpha.1"
 authors = ["Peter Williams <peter@newton.cx>"]
 description = "Decode x86 binaries (ELF or MachO) and print out which instruction set extensions they use."
 homepage = "https://github.com/pkgw/elfx86exts"
