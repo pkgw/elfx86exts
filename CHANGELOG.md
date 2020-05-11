@@ -1,3 +1,11 @@
+# 0.4.0 (2020 May 11)
+
+- Update dependencies, including to
+  [capstone](https://crates.io/crates/capstone) 0.7.0.
+- Fix a missing space in the `--help` output (@bjmoran,
+  [#29](https://github.com/pkgw/elfx86exts/pull/29))
+
+
 # 0.3.0 (2018 Oct 16)
 
 - The tool will now print out its best guess as to the minimum Intel CPU
