@@ -1,11 +1,11 @@
-# Copyright 2017-2018 Peter Williams
+# Copyright 2017-2020 Peter Williams
 # Licensed under the MIT License.
 
 [package]
 name = "elfx86exts"
 version = "0.3.0"
 authors = ["Peter Williams <peter@newton.cx>"]
-description = "Decode a x86 binaries (ELF or MachO) and print out which instruction set extensions they use."
+description = "Decode x86 binaries (ELF or MachO) and print out which instruction set extensions they use."
 homepage = "https://github.com/pkgw/elfx86exts"
 repository = "https://github.com/pkgw/elfx86exts"
 documentation = "https://docs.rs/crate/elfx86exts"
