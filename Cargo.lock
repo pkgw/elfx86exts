@@ -70,7 +70,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "clap"
-version = "2.33.1"
+version = "2.33.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "ansi_term 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -106,7 +106,7 @@ version = "0.4.1-alpha.1"
 dependencies = [
  "assert_cmd 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "capstone 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "clap 2.33.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "clap 2.33.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "escargot 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "memmap 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "object 0.20.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -348,7 +348,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum capstone-sys 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)" = "aebe07897b48983847943662bfc3198aabfa51636c81313c1955d04d857ed739"
 "checksum cc 1.0.52 (registry+https://github.com/rust-lang/crates.io-index)" = "c3d87b23d6a92cd03af510a5ade527033f6aa6fa92161e2d5863a907d4c5e31d"
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
-"checksum clap 2.33.1 (registry+https://github.com/rust-lang/crates.io-index)" = "bdfa80d47f954d53a35a64987ca1422f495b8d6483c0fe9f7117b36c2a792129"
+"checksum clap 2.33.2 (registry+https://github.com/rust-lang/crates.io-index)" = "10040cdf04294b565d9e0319955430099ec3813a64c952b86a41200ad714ae48"
 "checksum crc32fast 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)" = "ba125de2af0df55319f41944744ad91c71113bf74a4646efff39afe1f6842db1"
 "checksum difference 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)" = "524cbf6897b527295dff137cec09ecf3a05f4fddffd7dfcd1585403449e74198"
 "checksum doc-comment 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)" = "fea41bba32d969b513997752735605054bc0dfa92b4c56bf1189f2e174be7a10"
