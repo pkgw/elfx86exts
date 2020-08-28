@@ -23,7 +23,7 @@ steps:
   displayName: Setup Rust
 
 - bash: |
-    d="$(mktemp --tmpdir -d cranko.XXXXXX)"
+    d="$(mktemp -t -d cranko.XXXXXX)"
     cd "$d"
     curl --proto '=https' --tlsv1.2 -sSf https://pkgw.github.io/cranko/fetch-latest.sh | sh
     echo "##vso[task.prependpath]$d"
