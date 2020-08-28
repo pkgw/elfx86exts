@@ -24,32 +24,29 @@ steps:
   - checkout: self
 
   - bash: |
+      d="$(mktemp -t -d cranko.XXXXXX)"
+      cd "$d"
+      curl --proto '=https' --tlsv1.2 -sSf https://pkgw.github.io/cranko/fetch-latest.sh | sh
+      echo "##vso[task.prependpath]$d"
+    displayName: Install latest Cranko
+
+  - bash: |
       git switch -c release
       git pull --ff-only $(Pipeline.Workspace)/git-release/release.bundle
-      git status
       git show
-      tar xzf $(Pipeline.Workspace)/binary-x86_64-unknown-linux-gnu/cranko-*.tar.gz
-      ./cranko release-workflow tag
+      cranko release-workflow tag
     displayName: Prepare release commit and tags
 
   - bash: |
-      ./cranko github install-credential-helper
+      cranko github install-credential-helper
       git push --tags origin release:release
     displayName: Update release branch
     env:
       GITHUB_TOKEN: $(GITHUB_TOKEN)
 
   - bash: |
-      ./cranko github create-releases
-      ./cranko github upload-artifacts cranko $(Pipeline.Workspace)/collection/*
+      cranko github create-releases
+      cranko github upload-artifacts elfx86exts $(Pipeline.Workspace)/binary-collection/*
     displayName: Create GitHub releases
-    env:
-      GITHUB_TOKEN: $(GITHUB_TOKEN)
-
-  - bash: |
-      git fetch $(Pipeline.Workspace)/git-gh-pages/gh-pages.bundle gh-pages
-      git branch -f gh-pages FETCH_HEAD
-      git push --force origin gh-pages:gh-pages
-    displayName: Update GitHub pages website
     env:
       GITHUB_TOKEN: $(GITHUB_TOKEN)
