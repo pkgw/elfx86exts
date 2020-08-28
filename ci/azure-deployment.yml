@@ -24,7 +24,7 @@ steps:
   - checkout: self
 
   - bash: |
-      d="$(mktemp -t -d cranko.XXXXXX)"
+      d="$(mktemp -d /tmp/cranko.XXXXXX)"
       cd "$d"
       curl --proto '=https' --tlsv1.2 -sSf https://pkgw.github.io/cranko/fetch-latest.sh | sh
       echo "##vso[task.prependpath]$d"
