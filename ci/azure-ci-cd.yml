@@ -48,17 +48,17 @@ stages:
       TOOLCHAIN: stable
 
   # Windows builds
-  # - job: Windows
-  #   pool:
-  #     vmImage: windows-2019
-  #   steps:
-  #   - template: azure-build-and-test.yml
-  #   strategy:
-  #     matrix:
-  #       x86_64-msvc:
-  #         TOOLCHAIN: stable-x86_64-pc-windows-msvc
-  #       x86_64-gnu:
-  #         TOOLCHAIN: stable-x86_64-pc-windows-gnu
+  - job: Windows
+    pool:
+      vmImage: windows-2019
+    steps:
+    - template: azure-build-and-test.yml
+    strategy:
+      matrix:
+        x86_64-msvc:
+          TOOLCHAIN: stable-x86_64-pc-windows-msvc
+        x86_64-gnu:
+          TOOLCHAIN: stable-x86_64-pc-windows-gnu
 
 
 # If all of those succeed and we're not in a pull request, run the deployment

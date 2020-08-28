@@ -1,3 +1,8 @@
+# elfx86exts 0.4.2 (2020-08-28)
+
+- Add a Windows build ... mainly to demonstrate Cranko's usage in a build
+  pipeline that includes Windows builds.
+
 # elfx86exts 0.4.1 (2020-08-28)
 
 - Migrate to Cranko for versioning and release workflow.
