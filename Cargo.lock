@@ -102,7 +102,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "elfx86exts"
-version = "0.0.0-dev.0"
+version = "0.4.1"
 dependencies = [
  "assert_cmd 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "capstone 0.7.0 (registry+https://github.com/rust-lang/crates.io-index)",

@@ -1,4 +1,4 @@
-# rc: force 0.4.1
+# elfx86exts 0.4.1 (2020-08-28)
 
 - Migrate to Cranko for versioning and release workflow.
 
