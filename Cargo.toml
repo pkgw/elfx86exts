@@ -13,6 +13,7 @@ readme = "README.md"
 keywords = ["disassembly", "ELF", "MachO", "x86"]
 categories = ["command-line-utilities", "development-tools::debugging", "parsing"]
 license = "MIT"
+edition = "2018"
 
 [dependencies]
 capstone = "^0.7"

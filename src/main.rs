@@ -1,17 +1,13 @@
 // Copyright 2017-2018 Peter Williams
 // Licensed under the MIT License.
 
-/// elfx86exts helps you understand which instruction set extensions are used
-/// by an x86 binary. Despite the misleading name, this crate supports both
-/// ELF and MachO binary formats via the
-/// [capstone](https://crates.io/crates/capstone) crate.
-extern crate capstone;
-#[macro_use]
-extern crate clap;
-extern crate memmap;
-extern crate object;
+//! elfx86exts helps you understand which instruction set extensions are used
+//! by an x86 binary. Despite the misleading name, this crate supports both
+//! ELF and MachO binary formats via the
+//! [capstone](https://crates.io/crates/capstone) crate.
 
 use capstone::{Arch, Capstone, Mode, NO_EXTRA_MODE};
+use clap::crate_version;
 use object::{Object, ObjectSection, SectionKind};
 use std::cmp;
 use std::collections::HashMap;
