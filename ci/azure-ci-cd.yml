@@ -19,6 +19,7 @@ stages:
       parameters:
         primaryRcBuild: ${{ eq(variables['Build.SourceBranchName'], 'rc') }}
     variables:
+      TARGET: x86_64-unknown-linux-gnu
       TOOLCHAIN: stable
 
   # As far as I can tell, there is no way to matrix over a template *parameter*?
@@ -34,8 +35,10 @@ stages:
     strategy:
       matrix:
         beta:
+          TARGET: x86_64-unknown-linux-gnu
           TOOLCHAIN: beta
         nightly:
+          TARGET: x86_64-unknown-linux-gnu
           TOOLCHAIN: nightly
 
   # Mac builds
@@ -45,6 +48,7 @@ stages:
     steps:
     - template: azure-build-and-test.yml
     variables:
+      TARGET: x86_64-apple-darwin
       TOOLCHAIN: stable
 
   # Windows builds
@@ -56,8 +60,10 @@ stages:
     strategy:
       matrix:
         x86_64-msvc:
+          TARGET: x86_64-pc-windows-msvc
           TOOLCHAIN: stable-x86_64-pc-windows-msvc
         x86_64-gnu:
+          TARGET: x86_64-pc-windows-gnu
           TOOLCHAIN: stable-x86_64-pc-windows-gnu
 
 
