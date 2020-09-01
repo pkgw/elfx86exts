@@ -1,3 +1,10 @@
+# elfx86exts 0.4.3 (2020-09-01)
+
+- Bump to Rust 2018 edition
+- ci: use cranko's new binary-packaging helper and publish Rust packages to
+  crates.io upon deployment
+- Numerous dependency updates since last release on crates.io
+
 # elfx86exts 0.4.2 (2020-08-28)
 
 - Add a Windows build ... mainly to demonstrate Cranko's usage in a build

@@ -54,55 +54,28 @@ steps:
 
 - ${{ if eq(parameters.canaryBuild, false) }}:
   - bash: |
-      version="$(cranko show version elfx86exts)"
-      target="$(find . -name cargo-target.txt -execdir cat '{}' ';' -quit)"
-      echo "##vso[task.setvariable variable=rustTarget;]$target"
-      artifact_dir="$(Build.ArtifactStagingDirectory)/binary-$target"
-      mkdir -p "$artifact_dir"
-      tar="$artifact_dir/elfx86exts-$version-$target.tar.gz"
-      ls -l target/release # XXX TEMP
-      cd target/release
-      tar czf "$tar" elfx86exts
-    displayName: "Package binary (non-Windows)"
-    condition: and(succeeded(), ne(variables['Agent.OS'], 'Windows_NT'))
+      git add .
+      cranko release-workflow commit
+      git show HEAD
+    displayName: Make release commit
 
   - bash: |
-      version="$(cranko show version elfx86exts)"
-      echo "##vso[task.setvariable variable=elfx86extsVersion;]$version"
-      target="$(find . -name cargo-target.txt -execdir cat '{}' ';' -quit)"
-      echo "##vso[task.setvariable variable=rustTarget;]$target"
-      # at the moment, need to convert Windows paths to Cygwin:
-      staging=$(echo "$(Build.ArtifactStagingDirectory)" | sed -e 's|\\|\/|g' -e 's|^\([A-Za-z]\)\:/\(.*\)|/\L\1\E/\2|')
-      artifact_dir="$staging/binary-$target"
+      artifact_dir="$(Build.ArtifactStagingDirectory)/binary-$TARGET"
       mkdir -p "$artifact_dir"
-      mkdir -p temp_binary_archive
-      cp target/release/elfx86exts.exe temp_binary_archive/
-    displayName: "Prep package binary (Windows)"
-    condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
-
-  - task: ArchiveFiles@2
-    displayName: "Package binary (Windows)"
-    inputs:
-      rootFolderOrFile: temp_binary_archive/elfx86exts.exe
-      includeRootFolder: false
-      archiveType: 'zip'
-      archiveFile: "$(Build.ArtifactStagingDirectory)/binary-$(rustTarget)/elfx86exts-$(elfx86extsVersion)-$(rustTarget).zip"
-    condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+      cranko cargo package-released-binaries -t $TARGET $artifact_dir -- build --release
+    displayName: Package binaries
 
   - task: PublishPipelineArtifact@1
-    displayName: Publish packaged binary artifact
+    displayName: Publish packaged binary artifact(s)
     inputs:
-      targetPath: '$(Build.ArtifactStagingDirectory)/binary-$(rustTarget)'
-      artifactName: binary-$(rustTarget)
+      targetPath: '$(Build.ArtifactStagingDirectory)/binary-$(TARGET)'
+      artifactName: binary-$(TARGET)
 
-  # If, further, we're the primary build on the `rc` branch, generate and export
-  # the final release commit.
+  # If, further, we're the primary build on the `rc` branch, export ours as the
+  # canonical release commit.
 
   - ${{ if eq(parameters.primaryRcBuild, true) }}:
     - bash: |
-        git add .
-        cranko release-workflow commit
-        git show HEAD
         artifact_dir="$(Build.ArtifactStagingDirectory)/git-release"
         mkdir -p "$artifact_dir"
         git bundle create "$artifact_dir/release.bundle" origin/master..HEAD
