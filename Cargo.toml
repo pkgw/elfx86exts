@@ -16,7 +16,7 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-capstone = "^0.8"
+capstone = "^0.9"
 clap = "^2.33"
 object = "^0.24"
 memmap = "^0.7.0"
