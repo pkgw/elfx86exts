@@ -211,7 +211,7 @@ fn main() {
                 .expect("couldn't get details of an instruction");
 
             for group_code in detail.groups() {
-                if seen_groups.insert(group_code) {
+                if seen_groups.insert(group_code.clone()) {
                     // If insert returned true, we hadn't seen this code before.
                     if let Some(desc) = describe_group(group_code.0) {
                         if let Some(mnemonic) = insn.mnemonic() {
