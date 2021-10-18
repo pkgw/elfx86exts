@@ -3,7 +3,7 @@
 
 [package]
 name = "elfx86exts"
-version = "0.4.3"
+version = "0.5.0"
 authors = ["Peter Williams <peter@newton.cx>"]
 description = "Decode x86 binaries (ELF or MachO) and print out which instruction set extensions they use."
 homepage = "https://github.com/pkgw/elfx86exts"
@@ -16,11 +16,11 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-capstone = "^0.7"
+capstone = "^0.10"
 clap = "^2.33"
-object = "^0.21"
+object = "^0.27"
 memmap = "^0.7.0"
 
 [dev-dependencies]
-assert_cmd = "1.0"
+assert_cmd = "2.0"
 escargot = "0.5"
