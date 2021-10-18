@@ -18,7 +18,7 @@ edition = "2018"
 [dependencies]
 capstone = "^0.10"
 clap = "^2.33"
-object = "^0.26"
+object = "^0.27"
 memmap = "^0.7.0"
 
 [dev-dependencies]
