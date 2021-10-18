@@ -2,13 +2,12 @@ parameters:
 - name: canaryBuild
   type: boolean
   default: false
-- name: primaryRcBuild
+- name: primaryBuild
   type: boolean
   default: false
 
 steps:
 - checkout: self
-  fetchDepth: 1
 
 - bash: |
     set -ex
@@ -74,7 +73,7 @@ steps:
   # If, further, we're the primary build on the `rc` branch, export ours as the
   # canonical release commit.
 
-  - ${{ if eq(parameters.primaryRcBuild, true) }}:
+  - ${{ if and(eq(parameters.primaryBuild, true), eq(variables['Build.SourceBranchName'], 'rc')) }}:
     - bash: |
         artifact_dir="$(Build.ArtifactStagingDirectory)/git-release"
         mkdir -p "$artifact_dir"
