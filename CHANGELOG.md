@@ -2,7 +2,8 @@
 
 This release updates this tool to do its disassembly using [capstone 0.10][cs]
 and [object 0.27][obj]. In at least some cases, the previous release based on
-capstone 0.7 was giving seriously incorrect output (see [#66], filed by [@rowanworth]).
+capstone 0.7 was giving seriously incorrect output (see [#66], filed by
+[@rowanworth]).
 
 [cs]: https://github.com/capstone-rust/capstone-rs
 [obj]: https://github.com/gimli-rs/object
