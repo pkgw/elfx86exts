@@ -17,7 +17,7 @@ edition = "2018"
 
 [dependencies]
 capstone = "^0.10"
-clap = "^2.34"
+clap = "^3.0"
 object = "^0.28"
 memmap = "^0.7.0"
 
