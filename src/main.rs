@@ -1,4 +1,4 @@
-// Copyright 2017-2018 Peter Williams
+// Copyright 2017-2022 Peter Williams
 // Licensed under the MIT License.
 
 //! elfx86exts helps you understand which instruction set extensions are used
@@ -7,13 +7,14 @@
 //! [capstone](https://crates.io/crates/capstone) crate.
 
 use capstone::{Arch, Capstone, Mode, NO_EXTRA_MODE};
-use clap::crate_version;
+use clap::Parser;
 use object::{Object, ObjectSection, SectionKind};
-use std::cmp;
-use std::collections::HashMap;
-use std::collections::HashSet;
-use std::fs::File;
-use std::path::PathBuf;
+use std::{
+    cmp,
+    collections::{HashMap, HashSet},
+    fs::File,
+    path::PathBuf,
+};
 
 /// These are from capstone/include/x86.h, which is super sketchy since the
 /// enum values are not specificied explicitly.
@@ -66,6 +67,13 @@ fn describe_group(g: u8) -> Option<&'static str> {
     })
 }
 
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// The path of the file to analyze
+    path: PathBuf,
+}
+
 fn main() {
     // This list is taken from https://en.wikipedia.org/wiki/List_of_Intel_CPU_microarchitectures
     // The ID numbers here are internal elfx86exts identifiers; they have no meaning except
@@ -104,10 +112,13 @@ fn main() {
     .iter()
     .cloned()
     .collect();
+
     let mut cpu_generations_reverse: HashMap<u16, &str> = HashMap::new();
+
     for (key, val) in &cpu_generations {
         cpu_generations_reverse.insert(*val, key);
     }
+
     // The Intel generation that introduced each instruction set
     // This list is based on Googling and Wikipedia reading
     // Many of these are approximations, since CPU development isn't strictly linear, and not
@@ -159,23 +170,8 @@ fn main() {
     .cloned()
     .collect();
 
-    let matches = clap::App::new("elfx86exts")
-        .version(crate_version!())
-        .about("Analyze a binary to understand which instruction set extensions it uses.")
-        .after_help(
-            "Despite the misleading name, this program can handle binaries in both \
-             ELF and MachO formats, and possibly others.",
-        )
-        .arg(
-            clap::Arg::with_name("FILE")
-                .help("The path of the file to analyze")
-                .required(true)
-                .index(1),
-        )
-        .get_matches();
-
-    let inpath = PathBuf::from(matches.value_of_os("FILE").unwrap());
-    let f = File::open(inpath).expect("can't open object file");
+    let args = Args::parse();
+    let f = File::open(args.path).expect("can't open object file");
     let buf = unsafe { memmap::Mmap::map(&f).expect("can't memmap object file") };
 
     let obj = object::File::parse(&*buf).expect("can't parse object file");
