@@ -198,16 +198,16 @@ fn main() {
         let data = sect.data().expect("couldn't get section data");
 
         let insns = cs
-            .disasm_all(&data, sect.address())
+            .disasm_all(data, sect.address())
             .expect("couldn't disassemble section");
 
         for insn in insns.iter() {
             let detail = cs
-                .insn_detail(&insn)
+                .insn_detail(insn)
                 .expect("couldn't get details of an instruction");
 
             for group_code in detail.groups() {
-                if seen_groups.insert(group_code.clone()) {
+                if seen_groups.insert(*group_code) {
                     // If insert returned true, we hadn't seen this code before.
                     if let Some(desc) = describe_group(group_code.0) {
                         if let Some(mnemonic) = insn.mnemonic() {
