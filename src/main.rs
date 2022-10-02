@@ -79,6 +79,7 @@ fn main() {
     // The ID numbers here are internal elfx86exts identifiers; they have no meaning except
     // for their relative ordering.
     let cpu_generations: HashMap<&str, u16> = [
+        // Intel: 1xx
         ("Pentium", 100),
         ("Pentium Pro", 101),
         ("Pentium III", 102),
@@ -107,6 +108,12 @@ fn main() {
         ("Cascade Lake", 125),
         ("Cooper Lake", 126),
         ("Ice Lake", 127),
+        // AMD: 2xx
+        ("K6-2", 200),
+        ("Bulldozer", 201),
+        ("K10", 202),
+        ("Piledriver", 203),
+        // Unknown
         ("Unknown", 999),
     ]
     .iter()
@@ -125,7 +132,7 @@ fn main() {
     // all models of a generation support a given instruction set.
     let instrset_to_cpu: HashMap<&str, &str> = [
         ("VT-x/AMD-V", "Intel Core"), // guess; https://en.wikipedia.org/wiki/X86_virtualization
-        ("3DNow", "Unknown"), // Not supported by Intel CPUs; https://en.wikipedia.org/wiki/3DNow!
+        ("3DNow", "K6-2"), // Not supported by Intel CPUs, nor AMD since 2010; https://en.wikipedia.org/wiki/3DNow!
         ("AES", "Westmere"),  // https://en.wikipedia.org/wiki/AES_instruction_set
         ("ADX", "Broadwell"), // https://en.wikipedia.org/wiki/Intel_ADX
         ("AVX", "Sandy Bridge"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
@@ -136,8 +143,8 @@ fn main() {
         ("CMOV", "Pentium Pro"), // https://en.wikipedia.org/wiki/X86_instruction_listings
         ("F16C", "Ivy Bridge"), // https://en.wikipedia.org/wiki/F16C
         ("FMA", "Haswell"),    // https://en.wikipedia.org/wiki/FMA_instruction_set
-        ("FMA4", "Unknown"), // Not supported by Intel? https://en.wikipedia.org/wiki/FMA_instruction_set
-        ("FSGSBASE", "Unknown"), // ???
+        ("FMA4", "Bulldozer"), // Not supported by Intel? https://en.wikipedia.org/wiki/FMA_instruction_set
+        ("FSGSBASE", "Ivy Bridge"), // https://lwn.net/Articles/821723/
         ("HLE", "Haswell"), // Part of TSX - https://en.wikipedia.org/wiki/Transactional_Synchronization_Extensions
         ("MMX", "Pentium"), // https://en.wikipedia.org/wiki/MMX_(instruction_set)
         ("MODE32", "Pentium"), // Assuming all x86 CPUs support 32-bit mode
@@ -149,22 +156,22 @@ fn main() {
         ("SSE3", "Prescott"), // https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions
         ("SSE41", "Penryn"), // https://en.wikipedia.org/wiki/SSE4
         ("SSE42", "Nehalem"), // https://en.wikipedia.org/wiki/SSE4
-        ("SSE4A", "Unknown"), // AMD-only - https://en.wikipedia.org/wiki/SSE4
-        ("SSSE3", "Unknown"), // Merom, but I don't know where that goes in the CPU list
+        ("SSE4A", "K10"), // AMD-only - https://en.wikipedia.org/wiki/SSE4
+        ("SSSE3", "Intel Core"), // https://en.wikipedia.org/wiki/Intel_Core_(microarchitecture)
         ("PCLMUL", "Intel Core"), // https://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
-        ("XOP", "Unknown"),       // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
+        ("XOP", "Bulldozer"), // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
         ("CDI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
         ("ERI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
-        ("TBM", "Unknown"), // AMD-only - https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#TBM_(Trailing_Bit_Manipulation)
+        ("TBM", "Piledriver"), // AMD-only - https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#TBM_(Trailing_Bit_Manipulation)
         ("16BITMODE", "Unknown"),
         ("NOT64BITMODE", "Unknown"),
         ("SGX", "Skylake"), // https://en.wikipedia.org/wiki/Software_Guard_Extensions
-        ("DQI", "Unknown"), // Couldn't find a reference
-        ("BWI", "Unknown"), // Looks like a Xeon-only Knights Landing+ extension? - https://reviews.llvm.org/D26306
-        ("PFI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
-        ("VLX", "Unknown"), // Couldn't find a reference
+        ("DQI", "Cannon Lake"), // AVX-512 Doubleword and Quadword Instructions
+        ("BWI", "Cannon Lake"), // AVX-512 Byte and Word Instructions
+        ("PFI", "Unknown"), // AVX-512 Prefetch Instructions, implemented by Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
+        ("VLX", "Cannon Lake"), // AVX-512 Vector Length Extensions
         ("SMAP", "Broadwell"), // https://en.wikipedia.org/wiki/Supervisor_Mode_Access_Prevention
-        ("NOVLX", "Unknown"), // Couldn't find a reference
+        ("NOVLX", "Unknown"), // References in LLVM sources, associated mostly with AVX and AVX2 when VLX are not available
     ]
     .iter()
     .cloned()
