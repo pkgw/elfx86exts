@@ -18,6 +18,7 @@ use std::{
 
 /// These are from capstone/include/x86.h, which is super sketchy since the
 /// enum values are not specificied explicitly.
+#[cfg(target_arch = "x86_64")]
 fn describe_group(g: u8) -> Option<&'static str> {
     Some(match g {
         128 => "VT-x/AMD-V", // https://github.com/aquynh/capstone/blob/master/include/x86.h#L1583
@@ -61,6 +62,43 @@ fn describe_group(g: u8) -> Option<&'static str> {
         166 => "VLX",
         167 => "SMAP",
         168 => "NOVLX", // line 1623
+        _ => {
+            return None;
+        }
+    })
+}
+
+#[cfg(target_arch = "aarch64")]
+fn describe_group(g: u8) -> Option<&'static str> {
+    Some(match g {
+        128 => "CRYPTO", // https://github.com/aquynh/capstone/blob/master/include/aarch64.h
+        129 => "FPARMV8",
+        130 => "NEON",
+        131 => "CRC",
+        132 => "AES",
+        133 => "DOTPROD",
+        134 => "FULLFP16",
+        135 => "LSE",
+        136 => "RCPC",
+        137 => "RDM",
+        138 => "SHA2",
+        139 => "SHA3",
+        140 => "SM4",
+        141 => "SVE",
+        142 => "SVE2",
+        143 => "SVE2AES",
+        144 => "SVE2BitPerm",
+        145 => "SVE2SHA3",
+        146 => "SV#2SM4",
+        147 => "SME",
+        148 => "SMEF64",
+        149 => "SMEI64",
+        150 => "MatMulFP32",
+        151 => "MatMulFP64",
+        152 => "MatMulInt8",
+        153 => "V8_1A",
+        154 => "V8_3A",
+        155 => "V8_4A",
         _ => {
             return None;
         }
@@ -133,10 +171,10 @@ fn main() {
     let instrset_to_cpu: HashMap<&str, &str> = [
         ("VT-x/AMD-V", "Intel Core"), // guess; https://en.wikipedia.org/wiki/X86_virtualization
         ("3DNow", "K6-2"), // Not supported by Intel CPUs, nor AMD since 2010; https://en.wikipedia.org/wiki/3DNow!
-        ("AES", "Westmere"),  // https://en.wikipedia.org/wiki/AES_instruction_set
+        ("AES", "Westmere"), // https://en.wikipedia.org/wiki/AES_instruction_set
         ("ADX", "Broadwell"), // https://en.wikipedia.org/wiki/Intel_ADX
         ("AVX", "Sandy Bridge"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
-        ("AVX2", "Haswell"),  // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
+        ("AVX2", "Haswell"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
         ("AVX512", "Unknown"), // It's complicated. https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
         ("BMI", "Haswell"),    // https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets
         ("BMI2", "Haswell"),   // https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets
@@ -156,10 +194,10 @@ fn main() {
         ("SSE3", "Prescott"), // https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions
         ("SSE41", "Penryn"), // https://en.wikipedia.org/wiki/SSE4
         ("SSE42", "Nehalem"), // https://en.wikipedia.org/wiki/SSE4
-        ("SSE4A", "K10"), // AMD-only - https://en.wikipedia.org/wiki/SSE4
+        ("SSE4A", "K10"),   // AMD-only - https://en.wikipedia.org/wiki/SSE4
         ("SSSE3", "Intel Core"), // https://en.wikipedia.org/wiki/Intel_Core_(microarchitecture)
         ("PCLMUL", "Intel Core"), // https://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
-        ("XOP", "Bulldozer"), // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
+        ("XOP", "Bulldozer"),     // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
         ("CDI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
         ("ERI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
         ("TBM", "Piledriver"), // AMD-only - https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#TBM_(Trailing_Bit_Manipulation)
@@ -177,6 +215,11 @@ fn main() {
     .cloned()
     .collect();
 
+    #[cfg(target_arch = "x86_64")]
+    const TARGET_ARCH: Arch = Arch::x86;
+    #[cfg(target_arch = "aarch64")]
+    const TARGET_ARCH: Arch = Arch::ARM64;
+
     let args = Args::parse();
     let f = File::open(args.path).expect("can't open object file");
     let buf = unsafe { memmap::Mmap::map(&f).expect("can't memmap object file") };
@@ -188,9 +231,11 @@ fn main() {
     } else {
         Mode::Mode32
     };
+    #[cfg(target_arch = "aarch64")]
+    let mode = Mode::Arm;
 
-    let mut cs =
-        Capstone::new_raw(Arch::X86, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
+    let mut cs = Capstone::new_raw(TARGET_ARCH, mode, NO_EXTRA_MODE, None)
+        .expect("can't initialize capstone");
     cs.set_detail(true)
         .expect("can't enable Capstone detail mode");
 
@@ -214,33 +259,49 @@ fn main() {
                 .expect("couldn't get details of an instruction");
 
             for group_code in detail.groups() {
-                if seen_groups.insert(*group_code) {
-                    // If insert returned true, we hadn't seen this code before.
-                    if let Some(desc) = describe_group(group_code.0) {
-                        if let Some(mnemonic) = insn.mnemonic() {
-                            println!("{} ({})", desc, mnemonic);
-                            match instrset_to_cpu.get(desc) {
-                                Some(generation) => match cpu_generations.get(generation) {
-                                    Some(gen_code) => {
-                                        max_gen_code = cmp::max(max_gen_code, *gen_code);
-                                    }
-                                    None => unimplemented!(),
-                                },
-                                None => unimplemented!(),
-                            }
-                        } else {
-                            println!("{}", desc);
-                        }
-                    }
-                }
+                seen_groups.insert(group_code.0);
             }
         }
     }
 
-    match cpu_generations_reverse.get(&max_gen_code) {
-        Some(generation) => {
-            println!("CPU Generation: {}", generation);
+    let proc_features = seen_groups
+        .iter()
+        .filter_map(|g| describe_group(*g))
+        .collect::<Vec<&str>>();
+
+    println!(
+        "Instruction set extensions used: {}",
+        proc_features.join(", ")
+    );
+
+    #[cfg(target_arch = "x86_64")]
+    {
+        for group_code in seen_groups.iter() {
+            // If insert returned true, we hadn't seen this code before.
+            if let Some(desc) = describe_group(*group_code) {
+                // TODO: Replace this functionatlity?
+                // if let Some(mnemonic) = insn.mnemonic() {
+                //     println!("{} ({})", desc, mnemonic);
+                match instrset_to_cpu.get(desc) {
+                    Some(generation) => match cpu_generations.get(generation) {
+                        Some(gen_code) => {
+                            max_gen_code = cmp::max(max_gen_code, *gen_code);
+                        }
+                        None => unimplemented!(),
+                    },
+                    None => unimplemented!(),
+                }
+                // } else {
+                //     println!("{}", desc);
+                // }
+            }
         }
-        None => unimplemented!(),
+
+        match cpu_generations_reverse.get(&max_gen_code) {
+            Some(generation) => {
+                println!("CPU Generation: {}", generation);
+            }
+            None => unimplemented!(),
+        }
     }
 }
