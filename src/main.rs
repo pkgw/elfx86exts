@@ -240,7 +240,6 @@ fn main() {
         .expect("can't enable Capstone detail mode");
 
     let mut seen_groups = HashSet::new();
-    let mut max_gen_code = 100;
 
     for sect in obj.sections() {
         if sect.kind() != SectionKind::Text {
@@ -264,10 +263,11 @@ fn main() {
         }
     }
 
-    let proc_features = seen_groups
+    let mut proc_features = seen_groups
         .iter()
         .filter_map(|g| describe_group(*g))
         .collect::<Vec<&str>>();
+    proc_features.sort();
 
     println!(
         "Instruction set extensions used: {}",
@@ -276,6 +276,7 @@ fn main() {
 
     #[cfg(target_arch = "x86_64")]
     {
+        let mut max_gen_code = 100;
         for group_code in seen_groups.iter() {
             // If insert returned true, we hadn't seen this code before.
             if let Some(desc) = describe_group(*group_code) {
