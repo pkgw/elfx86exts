@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 //! elfx86exts helps you understand which instruction set extensions are used
-//! by an x86 binary. Despite the misleading name, this crate supports both
-//! ELF and MachO binary formats via the
+//! by a binary. Despite the misleading name, this crate supports both
+//! ELF and MachO binary formats and x86 as well as Arm processor architectures via the
 //! [capstone](https://crates.io/crates/capstone) crate.
 
 use capstone::{Arch, Capstone, Mode, NO_EXTRA_MODE};
@@ -18,9 +18,8 @@ use std::{
 
 /// These are from capstone/include/x86.h, which is super sketchy since the
 /// enum values are not specificied explicitly.
-#[cfg(target_arch = "x86_64")]
-fn describe_group(g: u8) -> Option<&'static str> {
-    Some(match g {
+fn describe_group_x86(g: &u8) -> Option<&'static str> {
+    Some(match *g {
         128 => "VT-x/AMD-V", // https://github.com/aquynh/capstone/blob/master/include/x86.h#L1583
         129 => "3DNow",
         130 => "AES",
@@ -68,11 +67,11 @@ fn describe_group(g: u8) -> Option<&'static str> {
     })
 }
 
-#[cfg(target_arch = "aarch64")]
-fn describe_group(g: u8) -> Option<&'static str> {
-    Some(match g {
-        128 => "CRYPTO", // https://github.com/aquynh/capstone/blob/master/include/aarch64.h
-        129 => "FPARMV8",
+/// These are from capstone/include/arm64.h
+fn describe_group_aarch64(g: &u8) -> Option<&'static str> {
+    Some(match *g {
+        128 => "CRYPTO",  // https://github.com/aquynh/capstone/blob/master/include/aarch64.h
+        129 => "FPARMV8", // Appears to map to both fp and fp16 instruction sets
         130 => "NEON",
         131 => "CRC",
         132 => "AES",
@@ -110,6 +109,29 @@ fn describe_group(g: u8) -> Option<&'static str> {
 struct Args {
     /// The path of the file to analyze
     path: PathBuf,
+
+    #[arg(long)]
+    x86: bool,
+    #[arg(long)]
+    aarch64: bool,
+}
+
+impl Args {
+    /// Return the architecture selected by the arguments, or the default for the host
+    fn get_arch(self: &Self) -> Arch {
+        if self.x86 as i32 + self.aarch64 as i32 > 1 {
+            panic!("Only one of --x86 and --aarch64 may be specified");
+        } else if self.x86 {
+            Arch::X86
+        } else if self.aarch64 {
+            Arch::ARM64
+        } else {
+            #[cfg(target_arch = "x86_64")]
+            return Arch::X86;
+            #[cfg(target_arch = "aarch64")]
+            return Arch::ARM64;
+        }
+    }
 }
 
 fn main() {
@@ -215,27 +237,34 @@ fn main() {
     .cloned()
     .collect();
 
-    #[cfg(target_arch = "x86_64")]
-    const TARGET_ARCH: Arch = Arch::x86;
-    #[cfg(target_arch = "aarch64")]
-    const TARGET_ARCH: Arch = Arch::ARM64;
-
     let args = Args::parse();
+
+    // Establish the architecture we're dealing with and arch-specific mode setting
+    let arch = args.get_arch();
+
+    // Read the file
     let f = File::open(args.path).expect("can't open object file");
     let buf = unsafe { memmap::Mmap::map(&f).expect("can't memmap object file") };
-
     let obj = object::File::parse(&*buf).expect("can't parse object file");
 
-    let mode = if obj.is_64() {
-        Mode::Mode64
-    } else {
-        Mode::Mode32
+    // The file open mode is quite processor-specific and for x86 is determined by the file we just opened.
+    let (mode, describe_group): (Mode, fn(&u8) -> Option<&str>) = match arch {
+        Arch::X86 => {
+            if obj.is_64() {
+                (Mode::Mode64, describe_group_x86)
+            } else {
+                (Mode::Mode32, describe_group_x86)
+            }
+        }
+        Arch::ARM64 => (Mode::Arm, describe_group_aarch64),
+        _ => {
+            panic!("Unsupported architecture: {:?}", arch);
+        }
     };
-    #[cfg(target_arch = "aarch64")]
-    let mode = Mode::Arm;
 
-    let mut cs = Capstone::new_raw(TARGET_ARCH, mode, NO_EXTRA_MODE, None)
-        .expect("can't initialize capstone");
+    // Disassemble the file
+    let mut cs =
+        Capstone::new_raw(arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
     cs.set_detail(true)
         .expect("can't enable Capstone detail mode");
 
@@ -258,14 +287,20 @@ fn main() {
                 .expect("couldn't get details of an instruction");
 
             for group_code in detail.groups() {
-                seen_groups.insert(group_code.0);
+                if seen_groups.insert(group_code.0) {
+                    if let Some(mnemonic) = insn.mnemonic() {
+                        if let Some(desc) = describe_group(&group_code.0) {
+                            println!("{} ({})", desc, mnemonic);
+                        }
+                    }
+                }
             }
         }
     }
 
     let mut proc_features = seen_groups
         .iter()
-        .filter_map(|g| describe_group(*g))
+        .filter_map(describe_group)
         .collect::<Vec<&str>>();
     proc_features.sort();
 
@@ -274,15 +309,11 @@ fn main() {
         proc_features.join(", ")
     );
 
-    #[cfg(target_arch = "x86_64")]
-    {
+    // For x86 processors, we can map the instruction set features to specific CPU generations
+    if arch == Arch::X86 {
         let mut max_gen_code = 100;
         for group_code in seen_groups.iter() {
-            // If insert returned true, we hadn't seen this code before.
-            if let Some(desc) = describe_group(*group_code) {
-                // TODO: Replace this functionatlity?
-                // if let Some(mnemonic) = insn.mnemonic() {
-                //     println!("{} ({})", desc, mnemonic);
+            if let Some(desc) = describe_group(group_code) {
                 match instrset_to_cpu.get(desc) {
                     Some(generation) => match cpu_generations.get(generation) {
                         Some(gen_code) => {
@@ -292,9 +323,6 @@ fn main() {
                     },
                     None => unimplemented!(),
                 }
-                // } else {
-                //     println!("{}", desc);
-                // }
             }
         }
 
