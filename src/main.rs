@@ -1,4 +1,4 @@
-// Copyright 2017-2022 Peter Williams
+// Copyright 2017-2023 elfx86exts contributors
 // Licensed under the MIT License.
 
 //! elfx86exts helps you understand which instruction set extensions are used
@@ -6,9 +6,9 @@
 //! ELF and MachO binary formats and x86 as well as Arm processor architectures via the
 //! [capstone](https://crates.io/crates/capstone) crate.
 
-use capstone::{Arch, Capstone, Mode, NO_EXTRA_MODE};
+use capstone::{Arch as CapArch, Capstone, Mode, NO_EXTRA_MODE};
 use clap::Parser;
-use object::{Object, ObjectSection, SectionKind};
+use object::{Architecture as ObjArch, Object, ObjectSection, SectionKind};
 use std::{
     cmp,
     collections::{HashMap, HashSet},
@@ -109,29 +109,6 @@ fn describe_group_aarch64(g: &u8) -> Option<&'static str> {
 struct Args {
     /// The path of the file to analyze
     path: PathBuf,
-
-    #[arg(long)]
-    x86: bool,
-    #[arg(long)]
-    aarch64: bool,
-}
-
-impl Args {
-    /// Return the architecture selected by the arguments, or the default for the host
-    fn get_arch(self: &Self) -> Arch {
-        if self.x86 as i32 + self.aarch64 as i32 > 1 {
-            panic!("Only one of --x86 and --aarch64 may be specified");
-        } else if self.x86 {
-            Arch::X86
-        } else if self.aarch64 {
-            Arch::ARM64
-        } else {
-            #[cfg(target_arch = "x86_64")]
-            return Arch::X86;
-            #[cfg(target_arch = "aarch64")]
-            return Arch::ARM64;
-        }
-    }
 }
 
 fn main() {
@@ -239,32 +216,54 @@ fn main() {
 
     let args = Args::parse();
 
-    // Establish the architecture we're dealing with and arch-specific mode setting
-    let arch = args.get_arch();
-
     // Read the file
-    let f = File::open(args.path).expect("can't open object file");
+    let f = File::open(&args.path).expect("can't open object file");
     let buf = unsafe { memmap::Mmap::map(&f).expect("can't memmap object file") };
     let obj = object::File::parse(&*buf).expect("can't parse object file");
+    let obj_arch = obj.architecture();
 
-    // The file open mode is quite processor-specific and for x86 is determined by the file we just opened.
-    let (mode, describe_group): (Mode, fn(&u8) -> Option<&str>) = match arch {
-        Arch::X86 => {
+    println!(
+        "File format and CPU architecture: {:?}, {obj_arch:?}",
+        obj.format()
+    );
+
+    // Figure out the capstone / analysis settings.
+    //
+    // Capstone apparently doesn't do any validation, so if we initialize it
+    // with the wrong architecture, it will just plunge on ahead and parse
+    // everything as best it can. So in principle instead of exiting early with
+    // unrecognized arches, we could print a warning and YOLO it. Right now we
+    // don't do that, but we do try to be generous about accepting any `object`
+    // architecture that might be consistent with a supported `capstone`
+    // architecture.
+    let (cap_arch, mode, describe_group): (CapArch, Mode, fn(&u8) -> Option<&str>) = match obj_arch
+    {
+        ObjArch::X86_64 | ObjArch::X86_64_X32 => {
             if obj.is_64() {
-                (Mode::Mode64, describe_group_x86)
+                (CapArch::X86, Mode::Mode64, describe_group_x86)
             } else {
-                (Mode::Mode32, describe_group_x86)
+                (CapArch::X86, Mode::Mode32, describe_group_x86)
             }
         }
-        Arch::ARM64 => (Mode::Arm, describe_group_aarch64),
+
+        ObjArch::Aarch64 | ObjArch::Aarch64_Ilp32 => {
+            (CapArch::ARM64, Mode::Arm, describe_group_aarch64)
+        }
+
         _ => {
-            panic!("Unsupported architecture: {:?}", arch);
+            // This could plausibly be an error exit, but it doesn't seem
+            // unreasonable to exit with success either.
+            println!(
+                "CPU architecture `{obj_arch:?}` of input file `{}` is not currently supported for analysis",
+                args.path.display()
+            );
+            return;
         }
     };
 
     // Disassemble the file
     let mut cs =
-        Capstone::new_raw(arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
+        Capstone::new_raw(cap_arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
     cs.set_detail(true)
         .expect("can't enable Capstone detail mode");
 
@@ -310,7 +309,7 @@ fn main() {
     );
 
     // For x86 processors, we can map the instruction set features to specific CPU generations
-    if arch == Arch::X86 {
+    if cap_arch == CapArch::X86 {
         let mut max_gen_code = 100;
         for group_code in seen_groups.iter() {
             if let Some(desc) = describe_group(group_code) {
