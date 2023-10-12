@@ -1,9 +1,9 @@
 # elfx86exts
 
-Disassemble a binary containing x86 instructions and print out which
-extensions it uses. Despite the utterly misleading name, **this tool supports
-ELF and MachO binaries**, and perhaps PE-format ones as well. (It used to be
-more limited.)
+Disassemble a binary and print out which instruction set extensions it uses.
+Despite the utterly misleading name, this tool supports ELF and MachO binaries,
+and perhaps other formats as well, and has preliminary support for ARM64 as well
+as X86/64. It used to be a lot more limited!
 
 I have no idea what I'm doing here, but it seems to work. There are several
 Rust crates that make this pretty easy to do.
@@ -11,8 +11,9 @@ Rust crates that make this pretty easy to do.
 
 ## Change Log
 
-See [the CHANGELOG](./CHANGELOG.md) for news about what has changed between
-releases.
+See [the CHANGELOG on the release
+branch](https://github.com/pkgw/elfx86exts/blob/release/CHANGELOG.md) for news
+about what has changed between releases.
 
 
 ## Installation
