@@ -1,9 +1,9 @@
-# Copyright 2017-2020 Peter Williams
+# Copyright 2017-2022 Peter Williams
 # Licensed under the MIT License.
 
 [package]
 name = "elfx86exts"
-version = "0.5.0"
+version = "0.6.0"
 authors = ["Peter Williams <peter@newton.cx>"]
 description = "Decode x86 binaries (ELF or MachO) and print out which instruction set extensions they use."
 homepage = "https://github.com/pkgw/elfx86exts"
@@ -16,9 +16,9 @@ license = "MIT"
 edition = "2018"
 
 [dependencies]
-capstone = "^0.10"
-clap = "^2.33"
-object = "^0.27"
+capstone = "^0.11"
+clap = { version = "^4", features = ["derive"] }
+object = "^0.32"
 memmap = "^0.7.0"
 
 [dev-dependencies]

@@ -1,3 +1,18 @@
+# elfx86exts 0.6.0 (2023-10-12)
+
+In the ongoing effor to make the name of this tool ever more inaccurate,
+@jasonmccampbell has added preliminary support for ARM64 (aarch64) binaries in
+#166! The program will now automatically detect the CPU architecture of the
+binary under analysis, and choose the X86 or ARM64 analysis path depending on
+what it sees. (Or if the binary is for some other architecture, it will bail
+out.)
+
+Since the last release, @dargor also added some names for AMD CPU generations
+and tidied up some of the related information (#88).
+
+There are also some general updates to the dependencies from @pkgw.
+
+
 # elfx86exts 0.5.0 (2021-10-18)
 
 This release updates this tool to do its disassembly using [capstone 0.10][cs]
