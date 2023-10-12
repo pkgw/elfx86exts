@@ -1,14 +1,14 @@
-// Copyright 2017-2022 Peter Williams
+// Copyright 2017-2023 elfx86exts contributors
 // Licensed under the MIT License.
 
 //! elfx86exts helps you understand which instruction set extensions are used
-//! by an x86 binary. Despite the misleading name, this crate supports both
-//! ELF and MachO binary formats via the
+//! by a binary. Despite the misleading name, this crate supports both
+//! ELF and MachO binary formats and x86 as well as Arm processor architectures via the
 //! [capstone](https://crates.io/crates/capstone) crate.
 
-use capstone::{Arch, Capstone, Mode, NO_EXTRA_MODE};
+use capstone::{Arch as CapArch, Capstone, Mode, NO_EXTRA_MODE};
 use clap::Parser;
-use object::{Object, ObjectSection, SectionKind};
+use object::{Architecture as ObjArch, Object, ObjectSection, SectionKind};
 use std::{
     cmp,
     collections::{HashMap, HashSet},
@@ -18,8 +18,8 @@ use std::{
 
 /// These are from capstone/include/x86.h, which is super sketchy since the
 /// enum values are not specificied explicitly.
-fn describe_group(g: u8) -> Option<&'static str> {
-    Some(match g {
+fn describe_group_x86(g: &u8) -> Option<&'static str> {
+    Some(match *g {
         128 => "VT-x/AMD-V", // https://github.com/aquynh/capstone/blob/master/include/x86.h#L1583
         129 => "3DNow",
         130 => "AES",
@@ -61,6 +61,43 @@ fn describe_group(g: u8) -> Option<&'static str> {
         166 => "VLX",
         167 => "SMAP",
         168 => "NOVLX", // line 1623
+        _ => {
+            return None;
+        }
+    })
+}
+
+/// These are from capstone/include/arm64.h
+fn describe_group_aarch64(g: &u8) -> Option<&'static str> {
+    Some(match *g {
+        128 => "CRYPTO",  // https://github.com/aquynh/capstone/blob/master/include/aarch64.h
+        129 => "FPARMV8", // Appears to map to both fp and fp16 instruction sets
+        130 => "NEON",
+        131 => "CRC",
+        132 => "AES",
+        133 => "DOTPROD",
+        134 => "FULLFP16",
+        135 => "LSE",
+        136 => "RCPC",
+        137 => "RDM",
+        138 => "SHA2",
+        139 => "SHA3",
+        140 => "SM4",
+        141 => "SVE",
+        142 => "SVE2",
+        143 => "SVE2AES",
+        144 => "SVE2BitPerm",
+        145 => "SVE2SHA3",
+        146 => "SV#2SM4",
+        147 => "SME",
+        148 => "SMEF64",
+        149 => "SMEI64",
+        150 => "MatMulFP32",
+        151 => "MatMulFP64",
+        152 => "MatMulInt8",
+        153 => "V8_1A",
+        154 => "V8_3A",
+        155 => "V8_4A",
         _ => {
             return None;
         }
@@ -133,10 +170,10 @@ fn main() {
     let instrset_to_cpu: HashMap<&str, &str> = [
         ("VT-x/AMD-V", "Intel Core"), // guess; https://en.wikipedia.org/wiki/X86_virtualization
         ("3DNow", "K6-2"), // Not supported by Intel CPUs, nor AMD since 2010; https://en.wikipedia.org/wiki/3DNow!
-        ("AES", "Westmere"),  // https://en.wikipedia.org/wiki/AES_instruction_set
+        ("AES", "Westmere"), // https://en.wikipedia.org/wiki/AES_instruction_set
         ("ADX", "Broadwell"), // https://en.wikipedia.org/wiki/Intel_ADX
         ("AVX", "Sandy Bridge"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
-        ("AVX2", "Haswell"),  // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
+        ("AVX2", "Haswell"), // https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
         ("AVX512", "Unknown"), // It's complicated. https://en.wikipedia.org/wiki/Advanced_Vector_Extensions
         ("BMI", "Haswell"),    // https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets
         ("BMI2", "Haswell"),   // https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets
@@ -156,10 +193,10 @@ fn main() {
         ("SSE3", "Prescott"), // https://en.wikipedia.org/wiki/Streaming_SIMD_Extensions
         ("SSE41", "Penryn"), // https://en.wikipedia.org/wiki/SSE4
         ("SSE42", "Nehalem"), // https://en.wikipedia.org/wiki/SSE4
-        ("SSE4A", "K10"), // AMD-only - https://en.wikipedia.org/wiki/SSE4
+        ("SSE4A", "K10"),   // AMD-only - https://en.wikipedia.org/wiki/SSE4
         ("SSSE3", "Intel Core"), // https://en.wikipedia.org/wiki/Intel_Core_(microarchitecture)
         ("PCLMUL", "Intel Core"), // https://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
-        ("XOP", "Bulldozer"), // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
+        ("XOP", "Bulldozer"),     // AMD-only - https://en.wikipedia.org/wiki/XOP_instruction_set
         ("CDI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
         ("ERI", "Unknown"), // Knights Landing - https://software.intel.com/en-us/blogs/2013/avx-512-instructions
         ("TBM", "Piledriver"), // AMD-only - https://en.wikipedia.org/wiki/Bit_Manipulation_Instruction_Sets#TBM_(Trailing_Bit_Manipulation)
@@ -178,24 +215,59 @@ fn main() {
     .collect();
 
     let args = Args::parse();
-    let f = File::open(args.path).expect("can't open object file");
+
+    // Read the file
+    let f = File::open(&args.path).expect("can't open object file");
     let buf = unsafe { memmap::Mmap::map(&f).expect("can't memmap object file") };
-
     let obj = object::File::parse(&*buf).expect("can't parse object file");
+    let obj_arch = obj.architecture();
 
-    let mode = if obj.is_64() {
-        Mode::Mode64
-    } else {
-        Mode::Mode32
+    println!(
+        "File format and CPU architecture: {:?}, {obj_arch:?}",
+        obj.format()
+    );
+
+    // Figure out the capstone / analysis settings.
+    //
+    // Capstone apparently doesn't do any validation, so if we initialize it
+    // with the wrong architecture, it will just plunge on ahead and parse
+    // everything as best it can. So in principle instead of exiting early with
+    // unrecognized arches, we could print a warning and YOLO it. Right now we
+    // don't do that, but we do try to be generous about accepting any `object`
+    // architecture that might be consistent with a supported `capstone`
+    // architecture.
+    let (cap_arch, mode, describe_group): (CapArch, Mode, fn(&u8) -> Option<&str>) = match obj_arch
+    {
+        ObjArch::X86_64 | ObjArch::X86_64_X32 => {
+            if obj.is_64() {
+                (CapArch::X86, Mode::Mode64, describe_group_x86)
+            } else {
+                (CapArch::X86, Mode::Mode32, describe_group_x86)
+            }
+        }
+
+        ObjArch::Aarch64 | ObjArch::Aarch64_Ilp32 => {
+            (CapArch::ARM64, Mode::Arm, describe_group_aarch64)
+        }
+
+        _ => {
+            // This could plausibly be an error exit, but it doesn't seem
+            // unreasonable to exit with success either.
+            println!(
+                "CPU architecture `{obj_arch:?}` of input file `{}` is not currently supported for analysis",
+                args.path.display()
+            );
+            return;
+        }
     };
 
+    // Disassemble the file
     let mut cs =
-        Capstone::new_raw(Arch::X86, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
+        Capstone::new_raw(cap_arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
     cs.set_detail(true)
         .expect("can't enable Capstone detail mode");
 
     let mut seen_groups = HashSet::new();
-    let mut max_gen_code = 100;
 
     for sect in obj.sections() {
         if sect.kind() != SectionKind::Text {
@@ -214,22 +286,10 @@ fn main() {
                 .expect("couldn't get details of an instruction");
 
             for group_code in detail.groups() {
-                if seen_groups.insert(*group_code) {
-                    // If insert returned true, we hadn't seen this code before.
-                    if let Some(desc) = describe_group(group_code.0) {
-                        if let Some(mnemonic) = insn.mnemonic() {
+                if seen_groups.insert(group_code.0) {
+                    if let Some(mnemonic) = insn.mnemonic() {
+                        if let Some(desc) = describe_group(&group_code.0) {
                             println!("{} ({})", desc, mnemonic);
-                            match instrset_to_cpu.get(desc) {
-                                Some(generation) => match cpu_generations.get(generation) {
-                                    Some(gen_code) => {
-                                        max_gen_code = cmp::max(max_gen_code, *gen_code);
-                                    }
-                                    None => unimplemented!(),
-                                },
-                                None => unimplemented!(),
-                            }
-                        } else {
-                            println!("{}", desc);
                         }
                     }
                 }
@@ -237,10 +297,39 @@ fn main() {
         }
     }
 
-    match cpu_generations_reverse.get(&max_gen_code) {
-        Some(generation) => {
-            println!("CPU Generation: {}", generation);
+    let mut proc_features = seen_groups
+        .iter()
+        .filter_map(describe_group)
+        .collect::<Vec<&str>>();
+    proc_features.sort();
+
+    println!(
+        "Instruction set extensions used: {}",
+        proc_features.join(", ")
+    );
+
+    // For x86 processors, we can map the instruction set features to specific CPU generations
+    if cap_arch == CapArch::X86 {
+        let mut max_gen_code = 100;
+        for group_code in seen_groups.iter() {
+            if let Some(desc) = describe_group(group_code) {
+                match instrset_to_cpu.get(desc) {
+                    Some(generation) => match cpu_generations.get(generation) {
+                        Some(gen_code) => {
+                            max_gen_code = cmp::max(max_gen_code, *gen_code);
+                        }
+                        None => unimplemented!(),
+                    },
+                    None => unimplemented!(),
+                }
+            }
         }
-        None => unimplemented!(),
+
+        match cpu_generations_reverse.get(&max_gen_code) {
+            Some(generation) => {
+                println!("CPU Generation: {}", generation);
+            }
+            None => unimplemented!(),
+        }
     }
 }
