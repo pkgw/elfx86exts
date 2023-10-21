@@ -266,6 +266,8 @@ fn main() {
         Capstone::new_raw(cap_arch, mode, NO_EXTRA_MODE, None).expect("can't initialize capstone");
     cs.set_detail(true)
         .expect("can't enable Capstone detail mode");
+    cs.set_skipdata(true)
+        .expect("can't enable Capstone skip data mode");
 
     let mut seen_groups = HashSet::new();
 
@@ -281,9 +283,9 @@ fn main() {
             .expect("couldn't disassemble section");
 
         for insn in insns.iter() {
-            let detail = cs
-                .insn_detail(insn)
-                .expect("couldn't get details of an instruction");
+            let Ok(detail) = cs.insn_detail(insn) else {
+                continue;
+            };
 
             for group_code in detail.groups() {
                 if seen_groups.insert(group_code.0) {
