@@ -1,6 +1,17 @@
-# rc: minor bump
+# rc: micro bump
 
-In the ongoing effor to make the name of this tool ever more inaccurate,
+- Ignore invalid instructions when parsing the executable (@HanabishiRecca,
+  #171, #172). This allows `elfx86exts` to handle some executables which have
+  regions of "junk" data between functions, such as ones created by [mold].
+  Thank you to @HanabishiRecca for reporting, investigating, and solving this
+  issue!
+
+[mold]: https://github.com/rui314/mold
+
+
+# elfx86exts 0.6.0 (2023-10-12)
+
+In the ongoing effort to make the name of this tool ever more inaccurate,
 @jasonmccampbell has added preliminary support for ARM64 (aarch64) binaries in
 #166! The program will now automatically detect the CPU architecture of the
 binary under analysis, and choose the X86 or ARM64 analysis path depending on
