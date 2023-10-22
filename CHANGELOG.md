@@ -1,5 +1,16 @@
 # rc: micro bump
 
+- Fix excessive memory consumption (@HanabishiRecca, #2, #90, #173). For a long
+  time, we have known that this program can consume surprisingly large amounts
+  of memory when processing large programs (well, and small ones too). It turns
+  out that if we simply disassemble one instruction at a time instead of in
+  bulk, not only do the memory requirements go way down, but the program is much
+  faster too! Thanks again to @HanabishiRecca for finally solving this
+  longstanding issue.
+
+
+# elfx86exts 0.6.1 (2023-10-21)
+
 - Ignore invalid instructions when parsing the executable (@HanabishiRecca,
   #171, #172). This allows `elfx86exts` to handle some executables which have
   regions of "junk" data between functions, such as ones created by [mold].
