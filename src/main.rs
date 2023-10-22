@@ -277,21 +277,32 @@ fn main() {
         }
 
         let data = sect.data().expect("couldn't get section data");
+        let mut offset = 0;
 
-        let insns = cs
-            .disasm_all(data, sect.address())
-            .expect("couldn't disassemble section");
+        loop {
+            let rest = &data[offset..];
 
-        for insn in insns.iter() {
-            let Ok(detail) = cs.insn_detail(insn) else {
-                continue;
-            };
+            if rest.is_empty() {
+                break;
+            }
 
-            for group_code in detail.groups() {
-                if seen_groups.insert(group_code.0) {
-                    if let Some(mnemonic) = insn.mnemonic() {
-                        if let Some(desc) = describe_group(&group_code.0) {
-                            println!("{} ({})", desc, mnemonic);
+            let insns = cs
+                .disasm_count(rest, 0, 1)
+                .expect("couldn't disassemble section");
+
+            for insn in insns.iter() {
+                offset += insn.bytes().len();
+
+                let Ok(detail) = cs.insn_detail(insn) else {
+                    continue;
+                };
+
+                for group_code in detail.groups() {
+                    if seen_groups.insert(group_code.0) {
+                        if let Some(mnemonic) = insn.mnemonic() {
+                            if let Some(desc) = describe_group(&group_code.0) {
+                                println!("{} ({})", desc, mnemonic);
+                            }
                         }
                     }
                 }
