@@ -20,7 +20,7 @@ parameters:
     type: object
     default:
     - name: linux_stable
-      vmImage: ubuntu-20.04
+      vmImage: ubuntu-latest
       params:
         primaryBuild: true
       vars:
@@ -28,7 +28,7 @@ parameters:
         TOOLCHAIN: stable
 
     - name: linux_beta
-      vmImage: ubuntu-20.04
+      vmImage: ubuntu-latest
       params:
         canaryBuild: true
       vars:
@@ -36,7 +36,7 @@ parameters:
         TOOLCHAIN: beta
 
     - name: linux_nightly
-      vmImage: ubuntu-20.04
+      vmImage: ubuntu-latest
       params:
         canaryBuild: true
       vars:
@@ -88,7 +88,7 @@ stages:
     environment: Deploy
     displayName: Deploy
     pool:
-      vmImage: ubuntu-20.04
+      vmImage: ubuntu-latest
 
     variables:
     - group: Deployment Credentials
