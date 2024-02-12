@@ -221,9 +221,9 @@ dependencies = [
 
 [[package]]
 name = "escargot"
-version = "0.5.8"
+version = "0.5.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "768064bd3a0e2bedcba91dc87ace90beea91acc41b6a01a3ca8e9aa8827461bf"
+checksum = "704ab670cffff92792405528eb8ec3d9f00be8939d56d947f6bc809f9ae249f8"
 dependencies = [
  "log",
  "once_cell",
