@@ -18,7 +18,7 @@ edition = "2018"
 [dependencies]
 capstone = "^0.12"
 clap = { version = "^4", features = ["derive"] }
-object = "^0.32"
+object = "^0.33"
 memmap = "^0.7.0"
 
 [dev-dependencies]
