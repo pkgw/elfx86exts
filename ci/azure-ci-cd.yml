@@ -44,14 +44,14 @@ parameters:
         TOOLCHAIN: nightly
 
     - name: windows_msvc
-      vmImage: windows-2019
+      vmImage: windows-latest
       params: {}
       vars:
         TARGET: x86_64-pc-windows-msvc
         TOOLCHAIN: stable-x86_64-pc-windows-msvc
 
     - name: windows_gnu
-      vmImage: windows-2019
+      vmImage: windows-latest
       params: {}
       vars:
         TARGET: x86_64-pc-windows-gnu
